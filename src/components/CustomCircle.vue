@@ -1,7 +1,7 @@
 <template>
   <g>
     <svg :class="'circle-node circle-' + arrayIndex" :data-answer="answer"  :width="getRealSize()" :height="getRealSize()" :x="cx" :y="cy" >
-      <rect v-if="type=='add'" :class="getClassName()" :x="getRealCenterPosition()-radius" :y="getRealCenterPosition()-radius" :width="radius*2" :height="radius*2" />
+      <rect v-if="hasChild==false" :class="getClassName()" :x="getRealCenterPosition()-radius" :y="getRealCenterPosition()-radius" :width="radius*2" :height="radius*2" stroke-dasharray="5,5"/>
       <circle v-else :class="getClassName()" :cx="getRealCenterPosition()" :cy="getRealCenterPosition()" :r="radius"/>
       <text :class="getClassName()+'-text'" x="50%" y="50%" alignment-baseline="middle" text-anchor="middle" >{{text}}</text>
     </svg>
@@ -23,7 +23,8 @@ export default {
     'strokeColor',
     'arrayIndex',
     'answer',
-    'type'
+    'type',
+    'hasChild'
   ],
   data () {
     return {
@@ -68,15 +69,18 @@ export default {
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
+  
   svg text{
     cursor: pointer;
+  }
+  circle, rect{
+    opacity: 0.8;
   }
   .circ-add {
     stroke: #9e9e9e;
     stroke-width: 1px;
     cursor: pointer;
     fill: #e0e0e0;
-    stroke-dasharray: 5,5;
   }
   .circ-add-text {
     font-weight: 800;

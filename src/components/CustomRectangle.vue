@@ -6,7 +6,7 @@
       <rect class="rect-image-back" v-if="category==2||category==3" :x="strokeWidth" :y="strokeWidth" :width="Math.abs(dx-strokeWidth)" :height="dy-strokeWidth-fontSize*3"  :fill="'white'"/>
       <image class="rect-image"  v-if="category==2||category==3" xlink:href="../assets/logo.png" :height="dy/2" :width="dx/2" :y="dy/4-fontSize*2" :x="dx/4" /> 
       <text class="rect-name" v-if="category==2||category==3" x="10" :y="getTextPosition()-fontSize*3" alignment-baseline="left" text-anchor="left" >{{text}}</text>
-      <text class="rect-description" v-if="category==2||category==3" x="10" :y="getTextPosition()-fontSize*2" alignment-baseline="left" text-anchor="left">Send email to {{email}}</text>
+      <text class="rect-description" v-if="category==2||category==3" x="10" :y="getTextPosition()-fontSize*2" alignment-baseline="left" text-anchor="left">{{email}}</text>
       
       <text v-if="category<0" :class="'rect-text ' + getClassName() + '-plus'" x="50%" y="40%" alignment-baseline="middle" text-anchor="middle">+</text>
       <text v-if="category<0" :class="'rect-text ' + getClassName() + '-text'" x="50%" y="70%" alignment-baseline="middle" text-anchor="middle">New Entry</text>
@@ -91,6 +91,12 @@ export default {
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
+  .rect-image {
+    pointer-events: none;
+  }
+  .rect-image-back {
+    pointer-events: none;
+  }
   .rect-text {
     font-weight: 800;
     fill: #616161;
@@ -117,6 +123,7 @@ export default {
     stroke-width: 1px;
     cursor: pointer;
     fill: #e0e0e0;
+    opacity: 0.8;
   }
 
   .rect-condition {

@@ -6,68 +6,98 @@
     <code>
       JSON Tree Structure - add/remove - drag and drop 
     </code>
-    <svg id="mainCanvas" width="100%" height="2500">
+    <SvgPanZoom class="parent-canvas"  :fit="false"  @svgpanzoom="registerSvgPanZoom">
+      <svg id="mainCanvas" width="100%" :height="canvas.height">
 
-      <g v-for="(node,index) in nodeData" :key="node.key" >
-        <g v-if="!node.same">
-          
-          <g v-if="node.multiple">
-            <!-- root --> 
-            <g v-for="entry in getMultipleEntry(index)" :key="entry.key">
-              <CustomRectangle   :text="entry.text" :cx="getNodeInfo(getIndexFromKey(entry.key)).x" :cy="getNodeInfo(getIndexFromKey(entry.key)).y + unitPixel/4"  :dx="getNodeInfo(getIndexFromKey(entry.key)).dx + 1" :dy="unitPixel*2.5" :arrayIndex="getIndexFromKey(entry.key)" :category="null" />
-              <CustomSpline :sx="getNodeInfo(index).x" :sy="getNodeInfo(index).y + unitPixel * 3.4" :ex="getNodeInfo(getIndexFromKey(entry.key)).x" :ey="getNodeInfo(getIndexFromKey(entry.key)).y + unitPixel*1.5" :strokeColor="'#7B1FA2'"   />
+        <g v-for="(node,index) in nodeData" :key="node.key" >
+          <g v-if="!node.same">
+            
+            <g v-if="node.multiple">
+              <!-- root --> 
+              <g v-for="entry in getMultipleEntry(index)" :key="entry.key">
+                <CustomRectangle   :text="entry.text" :cx="getNodeInfo(getIndexFromKey(entry.key)).x" :cy="getNodeInfo(getIndexFromKey(entry.key)).y + unitPixel/4"  :dx="getNodeInfo(getIndexFromKey(entry.key)).dx + 1" :dy="unitPixel*2.5" :arrayIndex="getIndexFromKey(entry.key)" :category="null" />
+                <CustomSpline :sx="getNodeInfo(index).x" :sy="getNodeInfo(index).y + unitPixel * 3.1" :ex="getNodeInfo(getIndexFromKey(entry.key)).x" :ey="getNodeInfo(getIndexFromKey(entry.key)).y + unitPixel*1.5" :strokeColor="'#7B1FA2'"   />
+              </g>
+              <!-- add entry --> 
+              <CustomRectangle :text="' '" :cx="getNodeInfo(index).x + getNodeInfo(index).dx / 2 - unitPixel*1" :cy="getNodeInfo(index).y+unitPixel/4"  :dx="unitPixel*3" :dy="unitPixel*2.5" :backgroundColor="'#e6e6e6'" :textColor="'#AB47BC'" :strokeColor="'#7B1FA2'"  v-on:click.native="addEntry(index)" :arrayIndex="null" :answer="null"  :category="-1" />
+              <CustomSpline :sx="getNodeInfo(index).x" :sy="getNodeInfo(index).y + unitPixel * 3.1" :ex="getNodeInfo(index).x + getNodeInfo(index).dx / 2 - unitPixel*1" :ey="getNodeInfo(index).y + unitPixel*1.5" :strokeColor="'#7B1FA2'"   />
+              <CustomCircle :text="'+'" :cx="getNodeInfo(index).x-unitPixel*3/5" :cy="getNodeInfo(index).y + unitPixel * 3"  :radius="unitPixel*3/5" class="add-node"  v-on:click.native="showDiag1(index)" :arrayIndex="index" :answer="null" type="add" :hasChild="hasChildren(index)"/>
             </g>
-            <!-- add entry --> 
-            <CustomRectangle :text="' '" :cx="getNodeInfo(index).x + getNodeInfo(index).dx / 2 - unitPixel*1" :cy="getNodeInfo(index).y+unitPixel/4"  :dx="unitPixel*3" :dy="unitPixel*2.5" :backgroundColor="'#e6e6e6'" :textColor="'#AB47BC'" :strokeColor="'#7B1FA2'"  v-on:click.native="addEntry(index)" :arrayIndex="null" :answer="null"  :category="-1" />
-            <CustomSpline :sx="getNodeInfo(index).x" :sy="getNodeInfo(index).y + unitPixel * 3.4" :ex="getNodeInfo(index).x + getNodeInfo(index).dx / 2 - unitPixel*1" :ey="getNodeInfo(index).y + unitPixel*1.5" :strokeColor="'#7B1FA2'"   />
-            <CustomCircle :text="'+'" :cx="getNodeInfo(index).x-unitPixel*3/5" :cy="getNodeInfo(index).y + unitPixel * 3"  :radius="unitPixel*3/5" :backgroundColor="'#E1BEE7'" :textColor="'#6A1B9A'" :strokeColor="'#7B1FA2'" class="add-node"  v-on:click.native="showDiag1(index)" :arrayIndex="index" :answer="null" type="add"/>
+            <g v-else>
+              <!--email and step -->
+              <CustomRectangle v-if="node.category==2||node.category==3" :text="node.text" :cx="getNodeInfo(index).x" :cy="getNodeInfo(index).y+unitPixel*2.5"  :dx="getNodeInfo(index).dx + 1" :dy="unitPixel*7" :arrayIndex="index" :category="node.category" :value="node.value" :content="node.content" :thumbnail="node.thumbnail" :icon="node.icon" :email="node.email"/>
+              <!--general -->
+              <CustomRectangle v-else :text="node.text" :cx="getNodeInfo(index).x" :cy="getNodeInfo(index).y"  :dx="getNodeInfo(index).dx + 1" :dy="unitPixel*2" :backgroundColor="'#AB47BC'" :textColor="'#F3E5F5'" :strokeColor="'#7B1FA2'" :arrayIndex="index" :category="node.category"/>
+            </g>
+            
+            <CustomSpline v-if="index>0" :sx="getNodeInfo(index).x" :sy="getNodeInfo(index).y - unitPixel" :ex="getNodeInfo(index).x" :ey="getNodeInfo(index).y - unitPixel*2 + 5 " :strokeColor="'#7B1FA2'"   />
+            <circle  v-if="index>0" :cx="getNodeInfo(index).x" :cy="getNodeInfo(index).y - unitPixel" :r="unitPixel/4" class="circle-top-joint" :data-index="index"/> 
+            <!-- condition -->
+            <g v-for="question in node.question" :key="node.key + question"  >
+              <CustomCircle :text="question" :cx="getChildInfo(index,question).x-unitPixel*4/5-1" :cy="getNodeInfo(index).y + unitPixel * 3 - 1"  :radius="unitPixel*4/5" :backgroundColor="'#E040FB'" :textColor="'#F3E5F5'" :strokeColor="'#7B1FA2'" type="condition" />
+              <CustomSpline :sx="getChildInfo(index,question).x" :sy="getNodeInfo(index).y + unitPixel * 3" :ex="getNodeInfo(index).x" :ey="getNodeInfo(index).y + unitPixel" />
+              <circle :cx="getChildInfo(index,question).x" :cy="getNodeInfo(index).y + getNodeInfo(index).dy - unitPixel*5.5" :r="unitPixel/6" class="circle-term-joint" :data-index="index" :data-question="question"/> 
+              <g v-if="node.goto==null || node.goto[question]==null">
+                <CustomCircle :text="'+'" :cx="getChildInfo(index,question).x-unitPixel*3/5-1" :cy="getNodeInfo(index).y + unitPixel * 6 - unitPixel/2"  :radius="unitPixel*3/5" class="add-node"  v-on:click.native="showDiag1(index,question)" :arrayIndex="index" :answer="question" type="add" :hasChild="hasChildren(index,question)"/>
+                <CustomSpline :sx="getChildInfo(index,question).x" :sy="getNodeInfo(index).y + unitPixel * 6 - unitPixel/2" :ex="getChildInfo(index,question).x" :ey="getNodeInfo(index).y + unitPixel * 5- unitPixel/2" />
+                <circle :cx="getChildInfo(index,question).x" :cy="getNodeInfo(index).y + getNodeInfo(index).dy - unitPixel*3.9" :r="unitPixel/6" class="circle-term-joint" :data-index="index" :data-question="question"/> 
+              </g>
+
+              
+              <!-- (goto) at blank branch of condition -->
+              <g v-if="!hasChildren(index,question)">
+                <g v-if="node.goto==null || node.goto[question]==null">
+                  <circle :cx="getChildInfo(index,question).x" :cy="getNodeInfo(index).y + getNodeInfo(index).dy - unitPixel" :r="unitPixel/4" class="circle-term-joint" :data-index="index" :data-question="question"/> 
+                  <CustomSpline :sx="getChildInfo(index,question).x" :sy="getNodeInfo(index).y + getNodeInfo(index).dy - unitPixel - unitPixel/4" :ex="getChildInfo(index,question).x" :ey="getNodeInfo(index).y + unitPixel * 6 - unitPixel/2 + unitPixel*6/5" />
+                </g>
+                <g v-else>
+                  <circle :cx="getChildInfo(index,question).x" :cy="getNodeInfo(index).y + getNodeInfo(index).dy - unitPixel*3.9" :r="unitPixel/4" class="circle-term-joint" :data-index="index" :data-question="question"/> 
+                  <!--(goto)~ line for branch -->
+                  <CustomSpline :sx="getChildInfo(index,question).x" :sy="getNodeInfo(index).y + getNodeInfo(index).dy - unitPixel * 4" :ex="getNodeInfo(getIndexFromKey(node.goto[question])).x" :ey="getNodeInfo(getIndexFromKey(node.goto[question])).y-unitPixel" type="1" :index="index"/>
+                </g>
+              </g>
+            </g>
+            <!-- -->
+            <g v-if="!node.question||node.question.length==0">
+              <!-- [+] -->
+              <g v-if="node.goto==null">
+                <CustomSpline v-if="!node.multiple" :sx="getNodeInfo(index).x" :sy="getNodeInfo(index).y + getNodeInfo(index).dy - unitPixel * 4" :ex="getNodeInfo(index).x" :ey="getNodeInfo(index).y + getNodeInfo(index).dy - unitPixel*3+1"  />
+                <CustomCircle v-if="!node.multiple" :text="'+'" :cx="getNodeInfo(index).x-unitPixel*3/5" :cy="getNodeInfo(index).y + getNodeInfo(index).dy - unitPixel * 3"  :radius="unitPixel*3/5" class="add-node"  v-on:click.native="showDiag1(index)"  :arrayIndex="index" :answer="null" type="add" :hasChild="hasChildren(index)"/>
+                <!--(goto) at blank node -->
+                <CustomSpline :sx="getNodeInfo(index).x" :sy="getNodeInfo(index).y + getNodeInfo(index).dy - unitPixel - unitPixel/4" :ex="getNodeInfo(index).x" :ey="getNodeInfo(index).y + getNodeInfo(index).dy - unitPixel*2+unitPixel/5" />
+                <circle  v-if="!node.multiple" :cx="getNodeInfo(index).x" :cy="getNodeInfo(index).y + getNodeInfo(index).dy - unitPixel" :r="unitPixel/4" class="circle-term-joint" :data-index="index"/> 
+              </g>
+              <!-- ~ (goto)line -->
+              <g v-else >
+                <CustomSpline :sx="getNodeInfo(index).x" :sy="getNodeInfo(index).y + getNodeInfo(index).dy - unitPixel * 4" :ex="getNodeInfo(getIndexFromKey(node.goto)).x" :ey="getNodeInfo(getIndexFromKey(node.goto)).y-unitPixel" type="1" :index="index"/>
+              </g>
+              <circle  v-if="index>0" :cx="getNodeInfo(index).x" :cy="getNodeInfo(index).y + getNodeInfo(index).dy - unitPixel * 4" :r="unitPixel/4" class="circle-bottom-joint" :data-index="index"/> 
+            </g>
+            <g v-else >
+              <circle  v-if="index>0" :cx="getNodeInfo(index).x" :cy="getNodeInfo(index).y + unitPixel " :r="unitPixel/6" class="circle-bottom-joint" :data-index="index"/> 
+            </g>
           </g>
-          <g v-else>
-            <!--email and step -->
-            <CustomRectangle v-if="node.category==2||node.category==3" :text="node.text" :cx="getNodeInfo(index).x" :cy="getNodeInfo(index).y+unitPixel*2.5"  :dx="getNodeInfo(index).dx + 1" :dy="unitPixel*7" :arrayIndex="index" :category="node.category" :value="node.value" :content="node.content" :thumbnail="node.thumbnail" :icon="node.icon"/>
-            <!--general -->
-            <CustomRectangle v-else :text="node.text" :cx="getNodeInfo(index).x" :cy="getNodeInfo(index).y"  :dx="getNodeInfo(index).dx + 1" :dy="unitPixel*2" :backgroundColor="'#AB47BC'" :textColor="'#F3E5F5'" :strokeColor="'#7B1FA2'" :arrayIndex="index" :category="node.category"/>
-          </g>
-          
-          <CustomSpline v-if="index>0" :sx="getNodeInfo(index).x" :sy="getNodeInfo(index).y - unitPixel" :ex="getNodeInfo(index).x" :ey="getNodeInfo(index).y - unitPixel*2 + 5 " :strokeColor="'#7B1FA2'"   />
-          <circle  v-if="index>0" :cx="getNodeInfo(index).x" :cy="getNodeInfo(index).y - unitPixel" :r="unitPixel/4" class="circle-top-joint" :data-index="index"/> 
-          
-          <g v-for="question in node.question" :key="node.key + question"  >
-            <CustomCircle :text="question" :cx="getChildInfo(index,question).x-unitPixel*4/5-1" :cy="getNodeInfo(index).y + unitPixel * 3 - 1"  :radius="unitPixel*4/5" :backgroundColor="'#E040FB'" :textColor="'#F3E5F5'" :strokeColor="'#7B1FA2'" type="condition" />
-            <CustomCircle :text="'+'" :cx="getChildInfo(index,question).x-unitPixel*3/5-1" :cy="getNodeInfo(index).y + unitPixel * 6 - unitPixel/2"  :radius="unitPixel*3/5" :backgroundColor="'#E1BEE7'" :textColor="'#6A1B9A'" :strokeColor="'#7B1FA2'" class="add-node"  v-on:click.native="showDiag1(index,question)" :arrayIndex="index" :answer="question" type="add"/>
-            <CustomSpline :sx="getChildInfo(index,question).x" :sy="getNodeInfo(index).y + unitPixel * 3" :ex="getNodeInfo(index).x" :ey="getNodeInfo(index).y + unitPixel" :strokeColor="'#7B1FA2'"   />
-            <CustomSpline :sx="getChildInfo(index,question).x" :sy="getNodeInfo(index).y + unitPixel * 6 - unitPixel/2" :ex="getChildInfo(index,question).x" :ey="getNodeInfo(index).y + unitPixel * 5- unitPixel/2" :strokeColor="'#7B1FA2'"   />
-          </g>
-          <g v-if="!node.question||node.question.length==0">
-            <CustomSpline v-if="!node.multiple" :sx="getNodeInfo(index).x" :sy="getNodeInfo(index).y + getNodeInfo(index).dy - unitPixel * 4" :ex="getNodeInfo(index).x" :ey="getNodeInfo(index).y + getNodeInfo(index).dy - unitPixel*2" :strokeColor="'#7B1FA2'"/>
-            <CustomCircle v-if="!node.multiple" :text="'+'" :cx="getNodeInfo(index).x-unitPixel*3/5" :cy="getNodeInfo(index).y + getNodeInfo(index).dy - unitPixel * 3"  :radius="unitPixel*3/5" :backgroundColor="'#E1BEE7'" :textColor="'#6A1B9A'" :strokeColor="'#7B1FA2'" class="add-node"  v-on:click.native="showDiag1(index)"  :arrayIndex="index" :answer="null" type="add"/>
-            <circle  v-if="index>0" :cx="getNodeInfo(index).x" :cy="getNodeInfo(index).y + getNodeInfo(index).dy - unitPixel * 4" :r="unitPixel/4" class="circle-bottom-joint" :data-index="index"/> 
-          </g>
+
+        </g>
+  
+        <!-- drag and drop focus -->
+        <g>
+          <rect id="dragRect" :x="50" :y="50" :width="50" :height="50" :stroke="'#546e7a'" :stroke-width="1" :fill="'#546e7a'" :nodeIndex="1" opacity="0"/>
+          <rect id="dropRect" :x="150" :y="150" :width="50" :height="50" :stroke="'#546e7a'" :stroke-width="2" :fill="'transparent'" :nodeIndex="1" opacity="0"  />
+          <circle id="dropCircle" :cx="unitPixel/4" :cy="unitPixel/4" :r="unitPixel/4"  :stroke="'#546e7a'" :stroke-width="2" :fill="'transparent'" :nodeIndex="1" opacity="0"/>
+          <circle id="dragCircle" :cx="unitPixel/4" :cy="unitPixel/4" :r="unitPixel/4"  :stroke="'#546e7a'" :stroke-width="2" :fill="'#546e7a'" :nodeIndex="1" opacity="0"/>
+
+        </g>
+        <!-- control box -->
+        <g>
+          <svg id="controlBox" x="50" y="50" width="150" :height="unitPixel*2"  >
+            <CustomCircle :text="'×'" :cx="45" :cy="20"  :radius="unitPixel/3" :backgroundColor="'red'" :textColor="'#6A1B9A'" :strokeColor="'#7B1FA2'" class="add-node"  v-on:click.native="removeNode()"  :arrayIndex="null" :answer="null" type="remove"/>
+            <CustomCircle :text="'~'" :cx="25" :cy="20"  :radius="unitPixel/3" :backgroundColor="'green'" :textColor="'#6A1B9A'" :strokeColor="'#7B1FA2'" class="add-node"  :arrayIndex="null" :answer="null" type="edit"/>
+          </svg>
         </g>
 
-      </g>
-      <!-- free node link (goto) --> 
-      <g v-for="link in nodeLink" :key="link.key">
-        <CustomSpline :sx="getNodeInfo(getIndexFromKey(link.key1)).x" :sy="getNodeInfo(getIndexFromKey(link.key1)).y + getNodeInfo(getIndexFromKey(link.key1)).dy - unitPixel * 4" :ex="getNodeInfo(getIndexFromKey(link.key2)).x" :ey="getNodeInfo(getIndexFromKey(link.key2)).y-unitPixel" :strokeColor="'#7B1FA2'"/>
-      </g>
-      <!-- drag and drop focus -->
-      <g>
-        <rect id="dragRect" :x="50" :y="50" :width="50" :height="50" :stroke="'#546e7a'" :stroke-width="1" :fill="'#546e7a'" :nodeIndex="1" opacity="0"/>
-        <rect id="dropRect" :x="150" :y="150" :width="50" :height="50" :stroke="'#546e7a'" :stroke-width="2" :fill="'transparent'" :nodeIndex="1" opacity="0"  />
-        <circle id="dropCircle" :cx="unitPixel/4" :cy="unitPixel/4" :r="unitPixel/4"  :stroke="'#546e7a'" :stroke-width="2" :fill="'transparent'" :nodeIndex="1" opacity="0"/>
-        <circle id="dragCircle" :cx="unitPixel/4" :cy="unitPixel/4" :r="unitPixel/4"  :stroke="'#546e7a'" :stroke-width="2" :fill="'#546e7a'" :nodeIndex="1" opacity="0"/>
-
-      </g>
-      <!-- control box -->
-      <g>
-        <svg id="controlBox" x="50" y="50" width="150" :height="unitPixel*2"  >
-          <CustomCircle :text="'×'" :cx="45" :cy="20"  :radius="unitPixel/3" :backgroundColor="'red'" :textColor="'#6A1B9A'" :strokeColor="'#7B1FA2'" class="add-node"  v-on:click.native="removeNode()"  :arrayIndex="null" :answer="null" type="remove"/>
-          <CustomCircle :text="'~'" :cx="25" :cy="20"  :radius="unitPixel/3" :backgroundColor="'green'" :textColor="'#6A1B9A'" :strokeColor="'#7B1FA2'" class="add-node"  :arrayIndex="null" :answer="null" type="edit"/>
-        </svg>
-      </g>
-
-    </svg>  
-
+      </svg>  
+    </SvgPanZoom>
     <Modal v-if="visibleDiag1">
       <div class="row" slot="header">
         <div class="col-sm-12">
@@ -180,15 +210,18 @@ import CustomCircle from '@/components/CustomCircle'
 import CustomSpline from '@/components/CustomSpline'
 import CustomRectangle from '@/components/CustomRectangle'
 import Modal from './Modal.vue'
+import SvgPanZoom from 'vue-svg-pan-zoom';
 
 export default {
   name: 'nodeData',
   data () {
     return {
+      canvas: {width:500, height:500},
       msg: "Please check me.",
       unitPixel: 25,
       ax: 0,
       ay: 0,
+      
       //create node (at terminal)
       selectedNode: null,
       selectedCategory: null,
@@ -199,6 +232,7 @@ export default {
       //drag and drop
       targetNode:null,
       sourceNode:null,
+      sourceQuestion: null,
       targetQuestion: null,
       draging: false,
 
@@ -228,15 +262,15 @@ export default {
       ],
       nodeData: [
         {key:1, category:0, text:'START', value:{name:'link'}, parent:null, multiple:true},
-        {key:16, category:0, text:'entry1', value:null, same:1, parent:null},
-        {key:17, category:0, text:'entry2', value:null, same:1, parent:null},
-        {key:2, category:1, text:'Does the contact match the following 1s?', value:null, question:['Yes', 'No'], parent:1},
-        {key:3, category:2, text:'Name', value:'20', answer:'Yes', parent:2, thumbnail:'logo.png', content:'Somthing', icon: "up", email:"aaa@gmail.com"},
-        {key:4, category:0, text:'Wait for 5day(s)', value:{day:2}, parent:3},
-        {key:5, category:1, text:'Additional entry', value:{email:'kkkks@gmail.com'}, parent:4, question:['1', '2', '3']},
-        {key:6, category:0, text:'Wait for 5hour(s)', value:{day:4}, parent:5, answer:'2'},
-        {key:7, category:0, text:'Notify to your email', value:{email:'kkkka@gmail.com'}, answer:'No', parent:2},
-        {key:8, category:1, text:'Does the contact match the following 1s?', value:null, question:['A', 'D', 'C','B'], parent:7},
+        {key:16, category:0, text:'Start Entry', value:null, same:1, parent:null},
+        {key:17, category:0, text:'Start Entry', value:null, same:1, parent:null},
+        {key:2, category:1, text:'This is an action', value:null, question:['Yes', 'No'], parent:1},
+        {key:3, category:2, text:'John Dae', value:'20', answer:'Yes', parent:2, thumbnail:'logo.png', content:'Somthing', icon: "up", email:"johndae@gmail.com"},
+        {key:4, category:0, text:'This is also another one', value:{day:2}, parent:3},
+        {key:5, category:1, text:'What/why/when', value:{email:'kkkks@gmail.com'}, parent:4, question:['1', '2', '3']},
+        {key:6, category:0, text:'THis is an action', value:{day:4}, parent:5, answer:'2'},
+        {key:7, category:0, text:'This is an action', value:{email:'kkkka@gmail.com'}, answer:'No', parent:2},
+        {key:8, category:1, text:'Pleae input question/answer.', value:null, question:['A', 'D', 'C','B'], parent:7},
         {key:11, category:0, text:'Notify {{email}}', value:{email:'kkkka@gmail.com'}, answer:'D', parent:8},
         {key:13, category:0, text:'Action3', value:{email:'3gmail.com'}, answer:'3', parent:5},
         {key:14, category:0, text:'Action2', value:{email:'1il.com'}, answer:'1', parent:5},
@@ -250,6 +284,7 @@ export default {
     CustomCircle,
     CustomSpline,
     CustomRectangle,
+    SvgPanZoom,
     'Modal': Modal
   },
   mounted () {
@@ -257,7 +292,15 @@ export default {
     this.load()
   },
   methods: {
-     getSubTreeWidth(i, rm){
+    registerSvgPanZoom(svgpanzoom) {
+        this.svgpanzoom = svgpanzoom;
+    },
+    center() {
+        if( !this.svgpanzoom ) return;
+
+        this.svgpanzoom.center();
+    },
+    getSubTreeWidth(i, rm){
       let w = 0, numChild = 0
       for (let index=0; index<rm.nodeData.length; index++) {
         if (rm.nodeData[i].key === rm.nodeData[index].parent) {
@@ -362,6 +405,10 @@ export default {
             if (rm.nodeData[index].parent === rm.nodeData[i].key){
               rm.nodePosition[index].x = rm.nodePosition[i].x
               rm.nodePosition[index].y = rm.nodePosition[i].y + rm.nodePosition[i].dy
+              let tht = rm.nodePosition[index].y + rm.nodePosition[index].dy + rm.unitPixel*10;
+              if (rm.canvas.height < tht) {
+                rm.canvas.height = tht 
+              }
               rm.setNodePosition(index, rm)
             }
           }
@@ -438,19 +485,24 @@ export default {
     load: function () {
       const rm = this
       //dx, dy
-      console.log(parseInt(d3.select('#mainCanvas').style('width')))
-      this.getNodeSize(rm)
-      this.getSubTreeWidth(0,rm)
+      rm.getNodeSize(rm)
+      rm.getSubTreeWidth(0,rm)
+      rm.canvas = {width:500, height:400}
+      //initial position of tree (root's)
+      rm.canvas.width = Math.max(this.nodePosition[0].tw, rm.canvas.width)
+      rm.nodePosition[0].x = rm.canvas.width/2
+      rm.nodePosition[0].y = 50
+
+      rm.setNodePosition(0,rm)
+      rm.setEntryPosition(0)
+      rm.sourceNode = null
+      rm.targetNode = null
       
-      this.nodePosition[0].x = Math.max(this.nodePosition[0].tw, parseInt(d3.select('#mainCanvas').style('width')))/2
-
-      this.setNodePosition(0,rm)
-      this.setEntryPosition(0)
-
+ 
       //d3 operation with drag and drop
 
       setTimeout(function(){
-
+        // initialize graph
         let offsetX, offsetY
 
         d3.selectAll('.circle-node circle')
@@ -468,9 +520,20 @@ export default {
           .attr('y',0)
           .attr('width',1)
           .attr('height',1)
+        d3.select("#dragCircle")
+          .attr('opacity',0)
+        d3.select("#dropCircle")
+          .attr('opacity',0)
+
+
         d3.select("#controlBox")
           .attr('opacity',0)
         
+        d3.select(".line-dot")
+          .raise()
+
+
+        // node drag and drop using d3
         const drag = d3.drag()
           .on("start", function(){
             rm.draging = true
@@ -498,7 +561,7 @@ export default {
                   cx = d3.select(this).attr('x') * 1.0 + d3.select(this).attr('width') / 2.0
                   cy = d3.select(this).attr('y') * 1.0 + d3.select(this).attr('height') / 2.0
                   dis = Math.sqrt((cx-d3.event.x + offsetX - rm.nodePosition[rm.sourceNode].dx/2.0)*(cx-d3.event.x + offsetX-rm.nodePosition[rm.sourceNode].dx/2.0) + (cy-d3.event.y + offsetY-rm.unitPixel)*(cy-d3.event.y + offsetY-rm.unitPixel))
-                  if (dis<rm.unitPixel) {
+                  if (dis<rm.unitPixel*2) {
                     rm.targetNode = i
                     rm.targetQuestion = d3.select(this).attr('data-answer')
                     d3.selectAll('.circle-node circle')
@@ -565,9 +628,9 @@ export default {
 
         d3.select("#dragRect").call(drag)
 
+//------------------------------------------------------------------------------------------------------------------------
 
-
-
+        // link (goto) drag and drop 
         const dragJointCircle = d3.drag()
           .on("start", function(){
             rm.draging = true
@@ -583,7 +646,7 @@ export default {
               .attr("cy",  d3.event.y - offsetY )
               .attr("opacity", 0.6)
             
-
+            rm.targetNode = null
             const bottomCircle = d3.selectAll('.circle-top-joint')
             const selPoint = this
             bottomCircle.each(function(){
@@ -596,7 +659,6 @@ export default {
                   .attr("cy", d3.select(this).attr('cy'))
                   .attr("opacity", 1)
                 rm.targetNode = this.getAttribute('data-index')
-
               }
 
             })
@@ -612,7 +674,15 @@ export default {
               .attr('opacity',0)
             d3.select("#dragCircle")
               .attr('opacity',0)
-            rm.addLink()
+            if (rm.targetNode !=null && rm.targetNode != rm.sourceNode) {
+              if (rm.hasChildren (rm.sourceNode)){
+                alert('Cannot goto another node from this node')
+              } else {
+                rm.addLink()
+                rm.sourceNode = null
+                rm.targetNode = null
+              }
+            }
           })
 
         d3.select("#dragCircle").call(dragJointCircle)
@@ -621,15 +691,23 @@ export default {
 
 
 
+        //link(goto) line remove
+
+        d3.selectAll(".line-dot")
+          .on("click", function(){
+            rm.sourceNode = this.getAttribute('data-index')
+            rm.removeGoto()
+          })
 
 
 
 
-
-        //mouse over
-        d3.selectAll(".circle-bottom-joint")
+        //link(goto) mouse over
+        d3.selectAll(".circle-term-joint")
           .on("mouseover",function(){
             rm.sourceNode = this.getAttribute('data-index')
+            rm.sourceQuestion = this.getAttribute('data-question')
+ 
             if (rm.sourceNode!=null){
               d3.select("#dragCircle")
                 .attr("cx", d3.select(this).attr('cx'))
@@ -638,7 +716,7 @@ export default {
             }
           })
  
-
+        //node mouse over
         d3.selectAll(".rect-node")
           .on("mouseover",function(){
             if (!rm.draging) {
@@ -752,7 +830,7 @@ export default {
           this.nodeData[this.selectedChild].answer = question[0]
         }
       }
-      this.nodeData.push({key:key, category:this.selectedCategory, text:text, answer:this.selectedQuestion, value:this.inputValue, parent:this.nodeData[this.selectedNode].key, question:question, content:"somthing" })
+      this.nodeData.push({key:key, category:this.selectedCategory, text:text, answer:this.selectedQuestion, value:this.inputValue, parent:this.nodeData[this.selectedNode].key, question:question, content:"somthing", goto:null})
       
       
       this.load()
@@ -843,15 +921,29 @@ export default {
 
     },
     addLink(){
-      const key1 = this.nodeData[this.sourceNode].key
-      const key2 = this.nodeData[this.targetNode].key
-      this.nodeLink.push ({key1:key1, key2:key2})
-      
+      const key = this.nodeData[this.targetNode].key
+      if (this.nodeData[this.sourceNode].category == 1){
+        if (this.nodeData[this.sourceNode].goto == null) this.nodeData[this.sourceNode].goto = {}
+        this.nodeData[this.sourceNode].goto[this.sourceQuestion] = key
+      } else {
+        this.nodeData[this.sourceNode].goto = key
+      }
+      this.load()
     },
     hasChildren(index){
       for (let i=0;i<this.nodeData.length;i++){
         if(this.nodeData[i].parent == this.nodeData[index].key){
           return true
+        }
+      }
+      return false
+    },
+    hasChildren(index, question){
+      for (let i=0;i<this.nodeData.length;i++){
+        if(this.nodeData[i].parent == this.nodeData[index].key){
+          if (this.nodeData[i].answer == question) {
+            return true
+          }
         }
       }
       return false
@@ -883,12 +975,26 @@ export default {
       this.load()
        
     },
+    removeGoto(){
+      if (this.sourceNode!=null) {
+        this.nodeData[this.sourceNode].goto = null
+        this.load()
+      }
+    },
 
     moveCopyNode(option){
       const rm = this
       
       let termIndex, nearIndex
       rm.hideDiag2()
+      //if it has goto, cannot move
+      if (rm.nodeData[rm.sourceNode].goto!=null) {
+        if ( rm.nodeData[rm.sourceNode].goto.length!=0){
+          alert('cannot move it because it was linked a node')
+          return
+        }
+      }
+
       switch(option) {
         case 1:  // move all branch
 
@@ -917,7 +1023,11 @@ export default {
         
         case 2: //alone
           if (rm.hasChildren(rm.sourceNode) && rm.nodeData[rm.sourceNode].category==1) {
-            alert ('cannot move it because it has some children')
+            alert ('cannot move it because it has some children or linked ones')
+            return
+          }
+          if (rm.nodeData[rm.sourceNode].goto!=null) {
+            alert ('cannot move it because it has some children or linked ones')
             return
           }
           nearIndex = rm.getNearChildIndex(rm.sourceNode,null)
@@ -981,7 +1091,24 @@ export default {
   .circle-bottom-joint{
     stroke: #9e9e9e;
     stroke-width: 1px;
+    fill: #f5f5f5;
+  }
+  .circle-term-joint{
+    stroke: #9e9e9e;
+    stroke-width: 1px;
     cursor: pointer;
     fill: #f5f5f5;
+  }
+  #dragCircle {
+    cursor: pointer;
+  }
+  #dragRect {
+    cursor: pointer;
+  }
+  .parent-canvas{
+    width: 100%;
+    height: 80vh;
+    border: 1px solid #9e9e9e;
+    overflow: hidden
   }
 </style>

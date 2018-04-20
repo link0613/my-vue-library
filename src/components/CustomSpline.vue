@@ -1,10 +1,10 @@
 <template>
   <g>
     <svg v-if="getSize().w" :width="getSize().w" :height="getSize().h" :x="getMin().x" :y="getMin().y">
-      <path :d="'M'+(sx-getMin().x)+','+(sy-getMin().y)+' '+'C'+(sx-getMin().x)+','+getSize().h/2+' '+(ex-getMin().x)+','+getSize().h*3/4+' '+(ex-getMin().x)+','+(ey-getMin().y)" :stroke-width="strokeWidth" />
+      <path :class="getClassName()" :d="'M'+(sx-getMin().x)+','+(sy-getMin().y)+' '+'C'+(sx-getMin().x)+','+getSize().h/2+' '+(ex-getMin().x)+','+getSize().h*2/5+' '+(ex-getMin().x)+','+(ey-getMin().y)" :stroke-width="strokeWidth" :data-index="index" />
     </svg>
     <svg v-else :width="strokeWidth*3" :height="getSize().h" :x="getMin().x - strokeWidth" :y="getMin().y">
-      <line :x1="strokeWidth" :y1="1" :x2="strokeWidth" :y2="getSize().h" :stroke-width="strokeWidth" />
+      <line :class="getClassName()" :x1="strokeWidth" :y1="1" :x2="strokeWidth" :y2="getSize().h" :stroke-width="strokeWidth" :data-index="index" />
     </svg>
   </g>
 </template>
@@ -19,7 +19,9 @@ export default {
     'sy',
     'ex',
     'ey',
-    'strokeColor'
+    'strokeColor',
+    'type',
+    'index'
   ],
   data () {
     return {
@@ -41,9 +43,18 @@ export default {
     },
     getSize(){
       return {w: Math.abs(this.sx - this.ex), h:Math.abs(this.sy- this.ey)}
+    },
+    getClassName(){
+      switch(parseInt(this.type)) {
+        case 1:
+          return 'line-dot'
+          break
+        default: 
+          return 'line-pain'
+      }
     }
 
-   }
+  }
 }
 </script>
 
@@ -56,5 +67,14 @@ export default {
   svg line {
     fill: transparent;
     stroke: #757575;
+  }
+  .line-dot{
+    stroke: #616161;
+    stroke-dasharray: 5,5;
+  }
+  .line-dot:hover{
+    stroke-width: 2px;
+    stroke: #FF5722;
+    cursor: pointer;
   }
 </style>
